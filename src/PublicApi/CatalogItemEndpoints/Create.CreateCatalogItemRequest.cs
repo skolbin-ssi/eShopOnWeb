@@ -1,4 +1,4 @@
-﻿namespace Microsoft.eShopWeb.Web.API.CatalogItemEndpoints
+﻿namespace Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints
 {
     public class CreateCatalogItemRequest : BaseRequest 
     {
@@ -9,4 +9,5 @@
         public string PictureUri { get; set; }
         public decimal Price { get; set; }
     }
+
 }
