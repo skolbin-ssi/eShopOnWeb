@@ -1,0 +1,15 @@
+﻿@page "/logout"
+@inject AuthService AuthService
+@inject IJSRuntime JSRuntime
+@inherits BlazorAdmin.Helpers.BlazorComponent
+
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.Logout();
+        await new Route(JSRuntime).RouteOutside("/Identity/Account/Login");
+    }
+
+}
