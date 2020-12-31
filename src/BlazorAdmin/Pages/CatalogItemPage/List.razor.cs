@@ -1,14 +1,22 @@
 ﻿using BlazorAdmin.Helpers;
-using BlazorAdmin.Services.CatalogBrandService;
-using BlazorAdmin.Services.CatalogItemService;
-using BlazorAdmin.Services.CatalogTypeService;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BlazorShared.Interfaces;
+using BlazorShared.Models;
 
 namespace BlazorAdmin.Pages.CatalogItemPage
 {
     public partial class List : BlazorComponent
     {
+        [Microsoft.AspNetCore.Components.Inject]
+        public ICatalogItemService CatalogItemService { get; set; }
+
+        [Microsoft.AspNetCore.Components.Inject]
+        public ICatalogBrandService CatalogBrandService { get; set; }
+
+        [Microsoft.AspNetCore.Components.Inject]
+        public ICatalogTypeService CatalogTypeService { get; set; }
+
         private List<CatalogItem> catalogItems = new List<CatalogItem>();
         private List<CatalogType> catalogTypes = new List<CatalogType>();
         private List<CatalogBrand> catalogBrands = new List<CatalogBrand>();
@@ -22,9 +30,9 @@ namespace BlazorAdmin.Pages.CatalogItemPage
         {
             if (firstRender)
             {
-                catalogItems = await new BlazorAdmin.Services.CatalogItemService.ListPaged(Auth).HandleAsync(50);
-                catalogTypes = await new BlazorAdmin.Services.CatalogTypeService.List(Auth).HandleAsync();
-                catalogBrands = await new BlazorAdmin.Services.CatalogBrandService.List(Auth).HandleAsync();
+                catalogItems = await CatalogItemService.List();
+                catalogTypes = await CatalogTypeService.List();
+                catalogBrands = await CatalogBrandService.List();
 
                 CallRequestRefresh();
             }
@@ -37,9 +45,9 @@ namespace BlazorAdmin.Pages.CatalogItemPage
             await DetailsComponent.Open(id);
         }
 
-        private void CreateClick()
+        private async Task CreateClick()
         {
-            CreateComponent.Open();
+            await CreateComponent.Open();
         }
 
         private async Task EditClick(int id)
@@ -54,7 +62,7 @@ namespace BlazorAdmin.Pages.CatalogItemPage
 
         private async Task ReloadCatalogItems()
         {
-            catalogItems = await new BlazorAdmin.Services.CatalogItemService.ListPaged(Auth).HandleAsync(50);
+            catalogItems = await CatalogItemService.List();
             StateHasChanged();
         }
     }

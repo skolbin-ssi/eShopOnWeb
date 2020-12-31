@@ -16,10 +16,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>@ViewData["Title"] - Microsoft.eShopOnWeb</title>
     <base href="~/" />
-    <environment include="Development">
+    <environment include="Development,Docker">
         <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     </environment>
-    <environment exclude="Development">
+    <environment exclude="Development,Docker">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
               asp-fallback-href="css/bootstrap/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
@@ -27,7 +27,7 @@
               integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" />
     </environment>
     <link href="css/admin.css" rel="stylesheet" />
-
+    <script src="_content/BlazorInputFile/inputfile.js"></script>
     <script>
 
         window.getCookie = (cname) => {
@@ -55,10 +55,18 @@
             window.location = path;
         };
 
+        window.hideBodyOverflow = () => {
+            document.body.classList.add("body-no-overflow");
+        };
+
+        window.showBodyOverflow = () => {
+            document.body.classList.remove("body-no-overflow");
+        };
+
     </script>
 </head>
 <body>
-    <admin>@(await Html.RenderComponentAsync<App>(RenderMode.ServerPrerendered))</admin>
+    <div id="admin"></div>    
     <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 

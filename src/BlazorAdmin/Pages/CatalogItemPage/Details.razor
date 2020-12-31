@@ -1,11 +1,10 @@
 ﻿@inject ILogger<Details> Logger
-@inject AuthService Auth
+@inject IJSRuntime JSRuntime
+@inject ICatalogItemService CatalogItemService
 
 @inherits BlazorAdmin.Helpers.BlazorComponent
 
 @namespace BlazorAdmin.Pages.CatalogItemPage
-
-
 
 <div class="modal @_modalClass" tabindex="-1" role="dialog" style="display:@_modalDisplay">
     <div class="modal-dialog" role="document">
@@ -26,9 +25,13 @@
                 {
                     <div class="container">
                         <div class="row">
-                            <img class="col-md-6 esh-picture" src="@($"https://localhost:44315/{_item.PictureUri}")">
+                            @if (HasPicture)
+                            {
+                                <img class="col-md-6 esh-picture" src="@($"{_item.PictureUri}")">
+                            }
 
-                            <dl class="col-md-6 dl-horizontal">
+
+                            <dl class="col-md-@(HasPicture?"6":"12") dl-horizontal">
                                 <dt>
                                     Name
                                 </dt>
@@ -50,7 +53,7 @@
                                 </dt>
 
                                 <dd>
-                                    @Services.CatalogBrandService.List.GetBrandName(Brands, _item.CatalogBrandId)
+                                    @_item.CatalogBrand
                                 </dd>
 
                                 <dt>
@@ -58,7 +61,7 @@
                                 </dt>
 
                                 <dd>
-                                    @Services.CatalogTypeService.List.GetTypeName(Types, _item.CatalogTypeId)
+                                    @_item.CatalogType
                                 </dd>
                                 <dt>
                                     Price
@@ -77,7 +80,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
-                <button class="btn btn-danger" @onclick="EditClick">
+                <button class="btn btn-primary" @onclick="EditClick">
                     Edit
                 </button>
             </div>
@@ -99,30 +102,38 @@
     [Parameter]
     public EventCallback<int> OnEditClick { get; set; }
 
+    private bool HasPicture => !string.IsNullOrEmpty(_item.PictureUri);
     private string _modalDisplay = "none;";
     private string _modalClass = "";
     private bool _showDetailsModal = false;
     private CatalogItem _item = new CatalogItem();
 
-    public void EditClick()
+    public async Task EditClick()
     {
-        OnEditClick.InvokeAsync(_item.Id);
-        Close();
+        await OnEditClick.InvokeAsync(_item.Id);
+        await Close();
     }
 
     public async Task Open(int id)
     {
+
         Logger.LogInformation("Now loading... /Catalog/Details/{Id}", id);
 
-        _item = await new GetById(Auth).HandleAsync(id);
+        await new Css(JSRuntime).HideBodyOverflow();
+
+        _item = await CatalogItemService.GetById(id);
 
         _modalDisplay = "block;";
         _modalClass = "Show";
         _showDetailsModal = true;
+
+        StateHasChanged();
     }
 
-    public void Close()
+    public async Task Close()
     {
+        await new Css(JSRuntime).ShowBodyOverflow();
+
         _modalDisplay = "none";
         _modalClass = "";
         _showDetailsModal = false;

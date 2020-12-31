@@ -1,9 +1,9 @@
-﻿@inject AuthService Auth
+﻿@inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
 
 @inherits BlazorAdmin.Helpers.BlazorLayoutComponent
 
-<AuthorizeView Roles=@Constants.Roles.ADMINISTRATORS>
+<AuthorizeView Roles=@BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS>
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -18,22 +18,21 @@
         @Body
     </div>
 </div>
-
-@code
+    @code
 {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await Auth.RefreshLoginInfoFromCookie();
-            if (!Auth.IsLoggedIn)
+            if (firstRender)
             {
-                await new Route(JSRuntime).RouteOutside("/Identity/Account/Login");
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+                if (authState.User == null)
+                {
+                    await new Route(JSRuntime).RouteOutside("/Identity/Account/Login");
+                }
+                CallRequestRefresh();
             }
-            CallRequestRefresh();
+
+            await base.OnAfterRenderAsync(firstRender);
         }
-
-        await base.OnAfterRenderAsync(firstRender);
     }
-
-}

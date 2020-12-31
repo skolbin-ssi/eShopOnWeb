@@ -1,11 +1,14 @@
+using BlazorAdmin.Services;
+using Blazored.LocalStorage;
+using BlazorShared;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using BlazorAdmin.Services;
-using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BlazorAdmin
 {
@@ -14,18 +17,37 @@ namespace BlazorAdmin
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("admin");
+            builder.RootComponents.Add<App>("#admin");
 
-            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            var baseUrlConfig = new BaseUrlConfiguration();
+            builder.Configuration.Bind(BaseUrlConfiguration.CONFIG_NAME, baseUrlConfig);
+            builder.Services.AddScoped<BaseUrlConfiguration>(sp => baseUrlConfig);
 
-            builder.Services.AddSingleton<ILocalStorageService, LocalStorageService>();
-            builder.Services.AddSingleton<AuthService>();
+            builder.Services.AddScoped(sp => new HttpClient() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+            builder.Services.AddScoped<HttpService>();
+
+            builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 
             builder.Services.AddAuthorizationCore();
-            builder.Services.AddSingleton<AuthenticationStateProvider, CustomAuthStateProvider>();
-            builder.Services.AddSingleton(sp => (CustomAuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
+            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+            builder.Services.AddScoped(sp => (CustomAuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
+
+            builder.Services.AddBlazorServices();
+
+            builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+
+            await ClearLocalStorageCache(builder.Services);
 
             await builder.Build().RunAsync();
+        }
+
+        private static async Task ClearLocalStorageCache(IServiceCollection services)
+        {
+            var sp = services.BuildServiceProvider();
+            var localStorageService = sp.GetRequiredService<ILocalStorageService>();
+
+            await localStorageService.RemoveItemAsync("brands");
         }
     }
 }

@@ -1,11 +1,18 @@
 ﻿using Ardalis.ListStartupServices;
+using BlazorAdmin;
+using BlazorAdmin.Services;
+using Blazored.LocalStorage;
+using BlazorShared;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.Infrastructure.Data;
 using Microsoft.eShopWeb.Infrastructure.Identity;
 using Microsoft.eShopWeb.Web.Configuration;
@@ -15,21 +22,17 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
-using BlazorAdmin.Services;
-using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 
 namespace Microsoft.eShopWeb.Web
 {
     public class Startup
     {
         private IServiceCollection _services;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -44,6 +47,15 @@ namespace Microsoft.eShopWeb.Web
 
             // use real database
             //ConfigureProductionServices(services);
+        }
+
+        public void ConfigureDockerServices(IServiceCollection services)
+        {
+            services.AddDataProtection()
+                .SetApplicationName("eshopwebmvc")
+                .PersistKeysToFileSystem(new DirectoryInfo(@"./"));
+
+            ConfigureDevelopmentServices(services);
         }
 
         private void ConfigureInMemoryDatabases(IServiceCollection services)
@@ -83,7 +95,16 @@ namespace Microsoft.eShopWeb.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            ConfigureCookieSettings.Configure(services);
+            services.AddCookieSettings();
+
+
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                });
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                        .AddDefaultUI()
@@ -92,8 +113,8 @@ namespace Microsoft.eShopWeb.Web
 
             services.AddScoped<ITokenClaimsService, IdentityTokenClaimService>();
 
-            ConfigureCoreServices.Configure(services, Configuration);
-            ConfigureWebServices.Configure(services, Configuration);
+            services.AddCoreServices(Configuration);
+            services.AddWebServices(Configuration);
 
             // Add memory cache services
             services.AddMemoryCache();
@@ -123,21 +144,24 @@ namespace Microsoft.eShopWeb.Web
                 config.Path = "/allservices";
             });
 
+            
+            var baseUrlConfig = new BaseUrlConfiguration();
+            Configuration.Bind(BaseUrlConfiguration.CONFIG_NAME, baseUrlConfig);
+            services.AddScoped<BaseUrlConfiguration>(sp => baseUrlConfig);
             // Blazor Admin Required Services for Prerendering
-            services.AddScoped<HttpClient>(s =>
+            services.AddScoped<HttpClient>(s => new HttpClient
             {
-                var navigationManager = s.GetRequiredService<NavigationManager>();
-                return new HttpClient
-                {
-                    //TODO need to do it well
-                    BaseAddress = new Uri("https://localhost:44315/")
-                    //BaseAddress = new Uri(navigationManager.BaseUri)
-                };
+                BaseAddress = new Uri(baseUrlConfig.WebBase)
             });
 
+            // add blazor services
             services.AddBlazoredLocalStorage();
             services.AddServerSideBlazor();
-            services.AddScoped<AuthService>();
+
+            services.AddScoped<HttpService>();
+            services.AddBlazorServices();
+
+            services.AddDatabaseDeveloperPageExceptionFilter();
 
             _services = services; // used to debug registered services
         }
@@ -167,8 +191,8 @@ namespace Microsoft.eShopWeb.Web
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseShowAllServicesMiddleware();
-                app.UseDatabaseErrorPage();
+                app.UseShowAllServicesMiddleware();                                
+                app.UseMigrationsEndPoint();
                 app.UseWebAssemblyDebugging();
             }
             else
@@ -197,6 +221,7 @@ namespace Microsoft.eShopWeb.Web
                 endpoints.MapFallbackToFile("index.html");
             });
         }
+
     }
 
 }

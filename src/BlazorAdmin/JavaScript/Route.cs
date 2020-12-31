@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.JSInterop;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace BlazorAdmin.JavaScript
 {
@@ -18,7 +14,7 @@ namespace BlazorAdmin.JavaScript
 
         public async Task RouteOutside(string path)
         {
-            await _jsRuntime.InvokeAsync<string>("routeOutside", path);
+            await _jsRuntime.InvokeAsync<string>(JSInteropConstants.RouteOutside, path);
         }
     }
 }

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.JSInterop;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace BlazorAdmin.JavaScript
 {
@@ -18,12 +14,12 @@ namespace BlazorAdmin.JavaScript
 
         public async Task DeleteCookie(string name)
         {
-            await _jsRuntime.InvokeAsync<string>("deleteCookie", name);
+            await _jsRuntime.InvokeAsync<string>(JSInteropConstants.DeleteCookie, name);
         }
 
         public async Task<string> GetCookie(string name)
         {
-            return await _jsRuntime.InvokeAsync<string>("getCookie", name);
+            return await _jsRuntime.InvokeAsync<string>(JSInteropConstants.GetCookie, name);
         }
     }
 }

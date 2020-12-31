@@ -5,6 +5,7 @@ using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.eShopWeb.PublicApi.CatalogTypeEndpoints
@@ -28,11 +29,11 @@ namespace Microsoft.eShopWeb.PublicApi.CatalogTypeEndpoints
             OperationId = "catalog-types.List",
             Tags = new[] { "CatalogTypeEndpoints" })
         ]
-        public override async Task<ActionResult<ListCatalogTypesResponse>> HandleAsync()
+        public override async Task<ActionResult<ListCatalogTypesResponse>> HandleAsync(CancellationToken cancellationToken)
         {
             var response = new ListCatalogTypesResponse();
 
-            var items = await _catalogTypeRepository.ListAllAsync();
+            var items = await _catalogTypeRepository.ListAllAsync(cancellationToken);
 
             response.CatalogTypes.AddRange(items.Select(_mapper.Map<CatalogTypeDto>));
 

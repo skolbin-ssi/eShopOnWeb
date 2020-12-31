@@ -1,11 +1,9 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
-using System.Collections.Generic;
+using System;
 
 namespace Microsoft.eShopWeb.ApplicationCore.Entities
 {
-
-
     public class CatalogItem : BaseEntity, IAggregateRoot
     {
         public string Name { get; private set; }
@@ -17,11 +15,11 @@ namespace Microsoft.eShopWeb.ApplicationCore.Entities
         public int CatalogBrandId { get; private set; }
         public CatalogBrand CatalogBrand { get; private set; }
 
-        public CatalogItem(int catalogTypeId, 
-            int catalogBrandId, 
-            string description, 
-            string name, 
-            decimal price, 
+        public CatalogItem(int catalogTypeId,
+            int catalogBrandId,
+            string description,
+            string name,
+            decimal price,
             string pictureUri)
         {
             CatalogTypeId = catalogTypeId;
@@ -53,6 +51,16 @@ namespace Microsoft.eShopWeb.ApplicationCore.Entities
         {
             Guard.Against.Zero(catalogTypeId, nameof(catalogTypeId));
             CatalogTypeId = catalogTypeId;
+        }
+
+        public void UpdatePictureUri(string pictureName)
+        {
+            if (string.IsNullOrEmpty(pictureName))
+            {
+                PictureUri = string.Empty;
+                return;
+            }
+            PictureUri = $"images\\products\\{pictureName}?{new DateTime().Ticks}";
         }
     }
 }
