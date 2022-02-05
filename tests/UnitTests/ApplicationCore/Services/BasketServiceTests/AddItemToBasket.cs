@@ -1,49 +1,43 @@
-﻿using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
+﻿using System.Threading.Tasks;
+using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.ApplicationCore.Services;
 using Microsoft.eShopWeb.ApplicationCore.Specifications;
 using Moq;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace Microsoft.eShopWeb.UnitTests.ApplicationCore.Services.BasketServiceTests
+namespace Microsoft.eShopWeb.UnitTests.ApplicationCore.Services.BasketServiceTests;
+
+public class AddItemToBasket
 {
-    public class AddItemToBasket
+    private readonly string _buyerId = "Test buyerId";
+    private readonly Mock<IRepository<Basket>> _mockBasketRepo = new();
+
+    [Fact]
+    public async Task InvokesBasketRepositoryGetBySpecAsyncOnce()
     {
-        private readonly string _buyerId = "Test buyerId";
-        private readonly Mock<IAsyncRepository<Basket>> _mockBasketRepo;
+        var basket = new Basket(_buyerId);
+        basket.AddItem(1, It.IsAny<decimal>(), It.IsAny<int>());
+        _mockBasketRepo.Setup(x => x.GetBySpecAsync(It.IsAny<BasketWithItemsSpecification>(), default)).ReturnsAsync(basket);
 
-        public AddItemToBasket()
-        {
-            _mockBasketRepo = new Mock<IAsyncRepository<Basket>>();
-        }
+        var basketService = new BasketService(_mockBasketRepo.Object, null);
 
-        [Fact]
-        public async Task InvokesBasketRepositoryGetByIdAsyncOnce()
-        {
-            var basket = new Basket(_buyerId);
-            basket.AddItem(1, It.IsAny<decimal>(), It.IsAny<int>());
-            _mockBasketRepo.Setup(x => x.FirstOrDefaultAsync(It.IsAny<BasketWithItemsSpecification>(), default)).ReturnsAsync(basket);
+        await basketService.AddItemToBasket(basket.BuyerId, 1, 1.50m);
 
-            var basketService = new BasketService(_mockBasketRepo.Object, null);
+        _mockBasketRepo.Verify(x => x.GetBySpecAsync(It.IsAny<BasketWithItemsSpecification>(), default), Times.Once);
+    }
 
-            await basketService.AddItemToBasket(basket.Id, 1, 1.50m);
+    [Fact]
+    public async Task InvokesBasketRepositoryUpdateAsyncOnce()
+    {
+        var basket = new Basket(_buyerId);
+        basket.AddItem(1, It.IsAny<decimal>(), It.IsAny<int>());
+        _mockBasketRepo.Setup(x => x.GetBySpecAsync(It.IsAny<BasketWithItemsSpecification>(), default)).ReturnsAsync(basket);
 
-            _mockBasketRepo.Verify(x => x.FirstOrDefaultAsync(It.IsAny<BasketWithItemsSpecification>(),default), Times.Once);
-        }
+        var basketService = new BasketService(_mockBasketRepo.Object, null);
 
-        [Fact]
-        public async Task InvokesBasketRepositoryUpdateAsyncOnce()
-        {
-            var basket = new Basket(_buyerId);
-            basket.AddItem(1, It.IsAny<decimal>(), It.IsAny<int>());
-            _mockBasketRepo.Setup(x => x.FirstOrDefaultAsync(It.IsAny<BasketWithItemsSpecification>(),default)).ReturnsAsync(basket);
+        await basketService.AddItemToBasket(basket.BuyerId, 1, 1.50m);
 
-            var basketService = new BasketService(_mockBasketRepo.Object, null);
-
-            await basketService.AddItemToBasket(basket.Id, 1, 1.50m);
-
-            _mockBasketRepo.Verify(x => x.UpdateAsync(basket,default), Times.Once);
-        }
+        _mockBasketRepo.Verify(x => x.UpdateAsync(basket, default), Times.Once);
     }
 }

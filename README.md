@@ -12,19 +12,19 @@ A list of Frequently Asked Questions about this repository can be found [here](h
 
 ## eBook
 
-This reference application is meant to support the free .PDF download ebook: [Architecting Modern Web Applications with ASP.NET Core and Azure](https://aka.ms/webappebook), updated to **ASP.NET Core 5.0**. [Also available in ePub/mobi formats](https://dotnet.microsoft.com/learn/web/aspnet-architecture).
+This reference application is meant to support the free .PDF download ebook: [Architecting Modern Web Applications with ASP.NET Core and Azure](https://aka.ms/webappebook), updated to **ASP.NET Core 6.0**. [Also available in ePub/mobi formats](https://dotnet.microsoft.com/learn/web/aspnet-architecture).
 
 You can also read the book in online pages at the .NET docs here: 
 https://docs.microsoft.com/dotnet/architecture/modern-web-apps-azure/
 
-[<img src="https://user-images.githubusercontent.com/782127/74948402-48512c80-53ca-11ea-948a-58d037440888.png" height="300" />](https://dotnet.microsoft.com/learn/web/aspnet-architecture)
+[<img src="https://dotnet.microsoft.com/blob-assets/images/e-books/aspnet.png" height="300" />](https://dotnet.microsoft.com/learn/web/aspnet-architecture)
 
 The **eShopOnWeb** sample is related to the [eShopOnContainers](https://github.com/dotnet/eShopOnContainers) sample application which, in that case, focuses on a microservices/containers-based application architecture. However, **eShopOnWeb** is much simpler in regards to its current functionality and focuses on traditional Web Application Development with a single deployment.
 
 The goal for this sample is to demonstrate some of the principles and patterns described in the [eBook](https://aka.ms/webappebook). It is not meant to be an eCommerce reference application, and as such it does not implement many features that would be obvious and/or essential to a real eCommerce application.
 
 > ### VERSIONS
-> #### The `master` branch is currently running ASP.NET Core 5.0.
+> #### The `main` branch is currently running ASP.NET Core 6.0.
 > #### Older versions are tagged.
 
 ## Topics (eBook TOC)
@@ -47,7 +47,7 @@ After cloning or downloading the sample you should be able to run it using an In
 
 ![eShopOnWeb home page screenshot](https://user-images.githubusercontent.com/782127/88414268-92d83a00-cdaa-11ea-9b4c-db67d95be039.png)
 
-Most of the site's functionality works with just the web application running. However, the site's Admin page relies on Blazor WebAssembly running in the browser, and it must communicate with the server using the site's PublicApi web application. You'll need to also run this project. You can configure Visual Studio to start multiple projects, or just go to the PublicApi folder in a terminal window and run `dotnet run` from there. Note that if you use this approach, you'll need to stop the application manually in order to build the solution (otherwise you'll get file locking errors).
+Most of the site's functionality works with just the web application running. However, the site's Admin page relies on Blazor WebAssembly running in the browser, and it must communicate with the server using the site's PublicApi web application. You'll need to also run this project. You can configure Visual Studio to start multiple projects, or just go to the PublicApi folder in a terminal window and run `dotnet run` from there. After that from the Web folder you should run `dotnet run --launch-profile Web`. Now you should be able to browse to `https://localhost:5001/`.   Note that if you use this approach, you'll need to stop the application manually in order to build the solution (otherwise you'll get file locking errors).
 
 If you wish to use the sample with a persistent database, you will need to run its Entity Framework Core migrations before you will be able to run the app, and update the `ConfigureServices` method in `Startup.cs` (see below).
 
@@ -55,18 +55,13 @@ You can also run the samples in Docker (see below).
 
 ### Configuring the sample to use SQL Server
 
-1. Update `Startup.cs`'s `ConfigureDevelopmentServices` method as follows:
+1. By default, the project uses a real database. If you want an in memory database, you can add in `appsettings.json`
 
-    ```csharp
-    public void ConfigureDevelopmentServices(IServiceCollection services)
-    {
-        // use in-memory database
-        //ConfigureTestingServices(services);
+    ```json
+   {
+       "UseOnlyInMemoryDatabase": true
+   }
 
-        // use real database
-        ConfigureProductionServices(services);
-
-    }
     ```
 
 1. Ensure your connection strings in `appsettings.json` point to a local SQL Server instance.
